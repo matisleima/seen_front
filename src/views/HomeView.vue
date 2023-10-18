@@ -1,44 +1,256 @@
 <template>
-  <div class="row m-3">
-<div class="col">
-</div>
-<div class="col">
-  <div id="map"></div>
-</div>
-<div class="col">
-</div>
-  </div>
+  <div @click="handleBackgroundClick" class="white-background">
+    <div class="row m-3">
+      <div class="col">
+      </div>
 
+      <div class="col">
+        <div id="map" @click.stop></div>
+      </div>
+
+      <div class="col">
+      </div>
+    </div>
+    <div class="row">
+
+      <div class="col">
+        <p>1. Klõpsa seenekoha märkimiseks kaardil!</p>
+        <p>2. Kirjuta siia, milliseid seeni sealt leida võib!</p>
+        <textarea v-model="descriptionBox" rows="5" cols="30" placeholder="Tohutult maitsvad kukeseened ja paar männiheinikat..." @click.stop></textarea>
+      </div>
+
+      <div class="col m-3">
+        <div>
+          <button @click.stop="savePoint" type="button" class="btn btn-success">SALVESTA</button>
+        </div>
+        <div>
+          <button v-if="pointIsSelected === true" @click.stop="editPoint" type="button" class="btn btn-warning">MUUDA
+          </button>
+        </div>
+        <div>
+          <button @click.stop="deletePoint" type="button" class="btn btn-danger">KUSTUTA</button>
+        </div>
+        <div v-if="message.length > 0" class="alert alert-warning m-3"> {{ message }}</div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
 import L from 'leaflet';
+import '@/assets/css/my-style.css';
 
 export default {
-  name: 'YourComponentName',
+  name: 'HomeView',
   data() {
     return {
       map: null,
+      message: '',
+      descriptionBox: '',
+      selectedPointId: 0,
+      selectedPoint: null,
+      originalCoordinates: [],
+      draggedCoordinates: [],
+      pointIsSelected: false,
+      markers: [],
+      singlePoint: {
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: []
+        },
+        properties: {
+          id: 0,
+          description: ''
+        }
+      },
+      allPoints: {
+        type: 'FeatureCollection',
+        features: [
+          {
+            type: 'Feature',
+            geometry: {
+              type: 'Point',
+              coordinates: []
+            },
+            properties: {
+              id: 0,
+              description: ''
+            }
+          }
+        ]
+      }
     };
-  },
-  mounted() {
-    this.initMap();
   },
   methods: {
     initMap() {
-      this.map = L.map('map').setView([58.62756196448109, 25.0117368536821], 7);
+      this.map = L.map('map').setView([58.62756, 25.01173], 7);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
       }).addTo(this.map);
+      this.map.on('click', this.addOnePointOnClick);
+    },
+    addOnePointOnClick(e) {
+      if (this.marker) {
+        this.map.removeLayer(this.marker);
+      }
+      this.singlePoint.geometry.coordinates = [e.latlng.lat, e.latlng.lng];
+      this.marker = L.marker(this.singlePoint.geometry.coordinates).addTo(this.map);
+    },
+    populateMap() {
+      this.clearNonTileLayers();
+
+      this.markers = [];
+      this.allPoints.features.forEach(feature => {
+        const marker = this.createMarker(feature);
+        this.markers.push(marker);
+        marker.addTo(this.map);
+      });
+    },
+    createMarker(feature) {
+      const marker = L.marker(feature.geometry.coordinates);
+      marker.originalCoordinates = [...feature.geometry.coordinates];
+      console.log('Original coordinates after marker creation: ' + marker.originalCoordinates)
+      marker.on('click', e => {
+        const popup = L.popup()
+            .setLatLng(e.latlng)
+            .setContent(feature.properties.description)
+            .openOn(this.map);
+
+        if (this.selectedPoint && this.selectedPoint.dragging) {
+          this.selectedPoint.dragging.disable();
+        }
+
+        this.selectedPoint = marker;
+        this.selectedPoint.dragging.enable();
+
+        this.pointIsSelected = true;
+        this.selectedPointId = feature.properties.id;
+        this.originalCoordinates = feature.geometry.coordinates;
+        this.descriptionBox = feature.properties.description;
+      });
+      marker.on('dragend', (e) => {
+        const newLatLng = marker.getLatLng();
+        this.draggedCoordinates = [newLatLng.lat, newLatLng.lng];
+      });
+      return marker;
+    },
+    clearNonTileLayers() {
+      this.map.eachLayer(layer => {
+        if (!(layer instanceof L.TileLayer)) {
+          this.map.removeLayer(layer);
+        }
+      });
+    },
+    savePoint() {
+      if (this.descriptionBox.length > 0) {
+        this.singlePoint.properties.description = this.descriptionBox;
+        this.$http.post("http://localhost:8080/add", this.singlePoint
+        ).then(response => {
+          this.message = ''
+          this.message = 'Asukoht salvestatud'
+          setTimeout(() => {
+            this.message = ''
+          }, 5000);
+          this.getAllPoints()
+          this.descriptionBox = ''
+        }).catch(error => {
+          const errorResponseBody = error.response.data
+        })
+      } else {
+        this.message = 'Palun kirjelda asukohta!'
+        setTimeout(() => {
+          this.message = ''
+        }, 5000);
+      }
+    },
+    editPoint() {
+      if (this.pointIsSelected) {
+        this.singlePoint.properties.description = this.descriptionBox;
+        this.singlePoint.properties.id = this.selectedPointId
+
+        if (this.draggedCoordinates.length > 0) {
+          this.singlePoint.geometry.coordinates = this.draggedCoordinates;
+        } else {
+          this.singlePoint.geometry.coordinates = this.originalCoordinates;
+        }
+        this.$http.put("http://localhost:8080/edit", this.singlePoint
+        ).then(response => {
+          this.message = ''
+          this.message = 'Asukoht muudetud'
+          setTimeout(() => {
+            this.message = ''
+          }, 5000);
+          this.descriptionBox = ''
+          this.map.closePopup();
+          this.selectedPoint.dragging.disable();
+          this.draggedCoordinates = [];
+          this.selectedPoint = null;
+        }).catch(error => {
+          const errorResponseBody = error.response.data
+        })
+      } else {
+        this.message = 'Palun vali mõni asukoht!'
+        setTimeout(() => {
+          this.message = ''
+        }, 5000);
+      }
+    },
+    deletePoint() {
+      if (this.pointIsSelected) {
+        this.$http.delete("http://localhost:8080/delete", {
+              params: {
+                id: this.selectedPointId
+              }
+            }
+        ).then(response => {
+          this.message = 'Asukoht kustutatud'
+          setTimeout(() => {
+            this.message = ''
+          }, 5000);
+          this.getAllPoints()
+          this.descriptionBox = ''
+          this.selectedPointId = 0
+          this.pointIsSelected = false
+        }).catch(error => {
+          const errorResponseBody = error.response.data
+        })
+      } else {
+        this.message = ''
+        this.message = 'Palun vali mõni asukoht!'
+        setTimeout(() => {
+          this.message = ''
+        }, 5000);
+      }
+    },
+    getAllPoints() {
+      this.$http.get("http://localhost:8080/get-all")
+          .then(response => {
+            this.allPoints = response.data
+            this.populateMap()
+          })
+          .catch(error => {
+            const errorResponseBody = error.response.data
+          })
+    },
+    handleBackgroundClick() {
+      this.pointIsSelected = false
+      this.map.closePopup();
+      if (this.selectedPoint) {
+        this.selectedPoint.setLatLng({
+          lat: this.selectedPoint.originalCoordinates[0],
+          lng: this.selectedPoint.originalCoordinates[1]
+        });
+        this.descriptionBox = ''
+        this.markers.forEach(marker => {
+          marker.dragging.disable();
+        });
+      }
     }
+  },
+  mounted() {
+    this.initMap();
+    this.getAllPoints()
   }
 }
-
 </script>
-
-<style scoped>
-#map {
-  height: 400px;
-  width: 600px;
-}
-</style>

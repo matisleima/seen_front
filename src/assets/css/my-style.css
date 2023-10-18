@@ -1,0 +1,14 @@
+.white-background {
+    background-color: white;
+    min-height: 100vh; /* ensures it covers the full viewport height */
+width: 100%; /* ensures it covers the full width */
+}
+
+#map {
+    height: 400px;
+    width: 600px;
+}
+
+.leaflet-container {
+    cursor: crosshair !important;
+}
