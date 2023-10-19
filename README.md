@@ -1,24 +1,34 @@
 # seen_front
 
-## Project setup
-```
-npm install
-```
+## description
+This is the front end code of a prototype web app for sharing mushroom picking spots which is 
+an absolutely unwanted and never occuring thing in the life of mushroom-loving
+people of Estonia. These places have been family secrets for decades and this app
+is here to shamefully break that tradition.
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+## instructions
+The app features a map of Estonia, a text box and buttons for adding,
+editing and deleting mushroom picking locations. 
 
-### Compiles and minifies for production
-```
-npm run build
-```
+### view locations
+Hover on the pins with the cursor to read about the existing spots.
+Zoom and drag the map for a more detailed navigation.
 
-### Lints and fixes files
-```
-npm run lint
-```
+### add a new location
+Simply click on the map, fill the text box with info about what can be found on spot and clik 'SALVESTA'.
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+### edit an existing location
+Click on an existing pin, drag it to a new location and/or change its description. Finally click 'MUUDA'.
+
+### delete a location
+Click on an existing pin and 'KUSTUTA'.
+
+### misc
+Clicking on the backgrounds cancels all ongoing operations.
+
+### P.S. 
+There is a known and unsolved Leaflet-Vue bug that throws an error in some
+map navigation combinations, most notably click on pin and zoom.
+
+### NB!
+NEVER share the whereabouts of a mushroom picking spot that you didn't discover yourself!

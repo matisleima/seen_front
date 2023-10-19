@@ -102,6 +102,25 @@ export default {
       }).addTo(this.map);
       this.map.on('click', this.addOnePointOnClick);
     },
+    getAllPoints() {
+      this.$http.get("http://localhost:8080/get-all")
+          .then(response => {
+            this.populateMap(response.data)
+          })
+          .catch(error => {
+            this.showMessage('Asukohtade päring andmebaasist ebaõnnestus!')
+          })
+    },
+    populateMap(allPoints) {
+      this.clearNonTileLayers();
+
+      this.markers = [];
+      allPoints.features.forEach(feature => {
+        const marker = this.createMarker(feature);
+        this.markers.push(marker);
+        marker.addTo(this.map);
+      });
+    },
     addOnePointOnClick(e) {
       this.pointIsSelected = false;
 
@@ -121,16 +140,6 @@ export default {
         });
         this.selectedPoint = null;
       }
-    },
-    populateMap(allPoints) {
-      this.clearNonTileLayers();
-
-      this.markers = [];
-      allPoints.features.forEach(feature => {
-        const marker = this.createMarker(feature);
-        this.markers.push(marker);
-        marker.addTo(this.map);
-      });
     },
     createMarker(feature) {
       const marker = L.marker(feature.geometry.coordinates);
@@ -242,15 +251,6 @@ export default {
       } else {
         this.showMessage('Palun vali mõni asukoht!')
       }
-    },
-    getAllPoints() {
-      this.$http.get("http://localhost:8080/get-all")
-          .then(response => {
-            this.populateMap(response.data)
-          })
-          .catch(error => {
-            this.showMessage('Asukohtade päring andmebaasist ebaõnnestus!')
-          })
     },
     startDrag() {
       this.isDragging = true;
