@@ -16,19 +16,26 @@
       <div class="col">
         <p>1. Klõpsa seenekoha märkimiseks kaardil!</p>
         <p>2. Kirjuta siia, milliseid seeni sealt leida võib!</p>
-        <textarea v-model="descriptionBox" rows="5" cols="30" placeholder="Tohutult maitsvad kukeseened ja paar männiheinikat..." @click.stop></textarea>
+        <textarea v-model="descriptionBox" rows="5" cols="30" placeholder="Vöödilised võluseened..."
+                  @click.stop @mousedown="startDrag"
+                  @mouseup="endDrag"></textarea>
       </div>
 
       <div class="col m-3">
         <div>
-          <button @click.stop="savePoint" type="button" class="btn btn-success">SALVESTA</button>
-        </div>
-        <div>
-          <button v-if="pointIsSelected === true" @click.stop="editPoint" type="button" class="btn btn-warning">MUUDA
+          <button :class="{ 'disabled-button': marker === null }" :disabled="marker === null" @click.stop="savePoint" class="btn btn-success">
+            SALVESTA
           </button>
         </div>
         <div>
-          <button @click.stop="deletePoint" type="button" class="btn btn-danger">KUSTUTA</button>
+          <button :class="{ 'disabled-button': pointIsSelected === false }" :disabled="pointIsSelected === false"
+                  @click.stop="editPoint" type="button" class="btn btn-warning">MUUDA
+          </button>
+        </div>
+        <div>
+          <button :class="{ 'disabled-button': pointIsSelected === false }" :disabled="pointIsSelected === false"
+                  @click.stop="deletePoint" type="button" class="btn btn-danger">KUSTUTA
+          </button>
         </div>
         <div v-if="message.length > 0" class="alert alert-warning m-3"> {{ message }}</div>
       </div>
@@ -52,6 +59,8 @@ export default {
       originalCoordinates: [],
       draggedCoordinates: [],
       pointIsSelected: false,
+      isDragging: false,
+      marker: null,
       markers: [],
       singlePoint: {
         type: 'Feature',
@@ -84,7 +93,15 @@ export default {
   },
   methods: {
     initMap() {
-      this.map = L.map('map').setView([58.62756, 25.01173], 7);
+      const estoniaBounds = L.latLngBounds(
+          L.latLng(57.5102, 21.3822),
+          L.latLng(59.7040, 28.3799)
+      );
+      this.map = L.map('map', {
+        minZoom: 7,
+        maxBounds: estoniaBounds,
+        maxBoundsViscosity: 1.0
+      }).setView([58.62756, 25.01173], 7);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
       }).addTo(this.map);
@@ -96,6 +113,17 @@ export default {
       }
       this.singlePoint.geometry.coordinates = [e.latlng.lat, e.latlng.lng];
       this.marker = L.marker(this.singlePoint.geometry.coordinates).addTo(this.map);
+      this.markers.forEach(marker => {
+        marker.dragging.disable();
+      });
+
+      if (this.selectedPoint) {
+        this.selectedPoint.setLatLng({
+          lat: this.selectedPoint.originalCoordinates[0],
+          lng: this.selectedPoint.originalCoordinates[1]
+        });
+        this.selectedPoint = null;
+      }
     },
     populateMap() {
       this.clearNonTileLayers();
@@ -110,8 +138,13 @@ export default {
     createMarker(feature) {
       const marker = L.marker(feature.geometry.coordinates);
       marker.originalCoordinates = [...feature.geometry.coordinates];
-      console.log('Original coordinates after marker creation: ' + marker.originalCoordinates)
+
       marker.on('click', e => {
+        if (this.marker) {
+          this.map.removeLayer(this.marker);
+          this.marker = null;
+        }
+
         const popup = L.popup()
             .setLatLng(e.latlng)
             .setContent(feature.properties.description)
@@ -147,7 +180,6 @@ export default {
         this.singlePoint.properties.description = this.descriptionBox;
         this.$http.post("http://localhost:8080/add", this.singlePoint
         ).then(response => {
-          this.message = ''
           this.message = 'Asukoht salvestatud'
           setTimeout(() => {
             this.message = ''
@@ -165,7 +197,7 @@ export default {
       }
     },
     editPoint() {
-      if (this.pointIsSelected) {
+      if (this.descriptionBox.length > 0) {
         this.singlePoint.properties.description = this.descriptionBox;
         this.singlePoint.properties.id = this.selectedPointId
 
@@ -174,9 +206,9 @@ export default {
         } else {
           this.singlePoint.geometry.coordinates = this.originalCoordinates;
         }
+
         this.$http.put("http://localhost:8080/edit", this.singlePoint
         ).then(response => {
-          this.message = ''
           this.message = 'Asukoht muudetud'
           setTimeout(() => {
             this.message = ''
@@ -186,11 +218,13 @@ export default {
           this.selectedPoint.dragging.disable();
           this.draggedCoordinates = [];
           this.selectedPoint = null;
+          this.getAllPoints()
+
         }).catch(error => {
           const errorResponseBody = error.response.data
         })
       } else {
-        this.message = 'Palun vali mõni asukoht!'
+        this.message = 'Palun kirjelda asukohta!'
         setTimeout(() => {
           this.message = ''
         }, 5000);
@@ -216,7 +250,6 @@ export default {
           const errorResponseBody = error.response.data
         })
       } else {
-        this.message = ''
         this.message = 'Palun vali mõni asukoht!'
         setTimeout(() => {
           this.message = ''
@@ -233,9 +266,24 @@ export default {
             const errorResponseBody = error.response.data
           })
     },
+    startDrag() {
+      this.isDragging = true;
+    },
+    endDrag() {
+      this.isDragging = false;
+    },
     handleBackgroundClick() {
+      if (this.isDragging) {
+        this.isDragging = false;
+        return;
+      }
       this.pointIsSelected = false
+      if (this.marker) {
+        this.map.removeLayer(this.marker);
+        this.marker = null
+      }
       this.map.closePopup();
+      this.descriptionBox = '';
       if (this.selectedPoint) {
         this.selectedPoint.setLatLng({
           lat: this.selectedPoint.originalCoordinates[0],
