@@ -4,14 +4,8 @@
 width: 100%;
 }
 
-.disabled-button {
-    background-color: #e0e0e0;
-    color: #aaa;
-    cursor: not-allowed;
-}
-
-
 #map {
+    margin: 20px auto 20px auto;
     height: 400px;
     width: 600px;
 }
@@ -19,3 +13,164 @@ width: 100%;
 .leaflet-container {
     cursor: crosshair !important;
 }
+
+.box-container {
+    display: flex;
+    justify-content: space-between;
+    width: 600px;
+    margin: 0 auto;
+}
+
+.box {
+    display: flex;
+    flex-direction: column;
+}
+
+.left-box {
+    align-self: flex-start;
+    gap: 15px;
+}
+
+.right-box {
+    align-self: flex-end;
+    gap: 15px;
+    margin: 0 15px;
+}
+
+.btn:disabled,
+.disabled-button {
+    background-color: #e0e0e0;
+    color: #aaa;
+    cursor: none;
+    border-color: #d0d0d0;
+}
+
+.btn:disabled:hover,
+.disabled-button:hover {
+    background-color: #e0e0e0;
+    color: #aaa;
+    border-color: #d0d0d0;
+}
+
+.alert {
+    padding: .75rem 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+    border-radius: .25rem;
+}
+
+.alert-warning {
+    color: #856404;
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+}
+
+.m-1 {
+    margin: 7px !important;
+}
+
+.btn {
+    width: 150px;
+    height: 60px;
+    display: inline-block;
+    font-weight: 400;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    user-select: none;
+    border: 1px solid transparent;
+    padding: .375rem .75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: .25rem;
+    transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.btn-success {
+    color: #fff;
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.btn-success:hover {
+    color: #fff;
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
+.btn-warning {
+    color: #212529;
+    background-color: #ffc107;
+    border-color: #ffc107;
+}
+
+.btn-warning:hover {
+    color: #212529;
+    background-color: #e0a800;
+    border-color: #d39e00;
+}
+
+.btn-danger {
+    color: #fff;
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-danger:hover {
+    color: #fff;
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+.text-field {
+    font-size: 16px;
+    padding: 10px 15px;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+    font-family: Arial, sans-serif; /* Sets the font to Arial, with a generic sans-serif fallback */
+}
+
+.text-field:focus {
+    border-color: #007BFF;
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.25);
+}
+
+.text-field::placeholder {
+    color: #999;
+}
+
+.blur-box {
+    background-color: rgba(255, 255, 255, 0.5);
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.blur-background {
+    backdrop-filter: blur(3px);
+    border-radius: 10px;
+}
+
+.background {
+    background-image: url('https://1.bp.blogspot.com/-NoEf3Q5wTPc/XZTk5CrRpwI/AAAAAAAAF80/by5eCvAANo8I38FXiPhYEE1gRGnhzvpEgCLcBGAsYHQ/s1600/seenemets%2B22.09%2Bveel.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+body { /* or your specific container */
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    width: 100vw;
+    background-image: url('https://1.bp.blogspot.com/-NoEf3Q5wTPc/XZTk5CrRpwI/AAAAAAAAF80/by5eCvAANo8I38FXiPhYEE1gRGnhzvpEgCLcBGAsYHQ/s1600/seenemets%2B22.09%2Bveel.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+

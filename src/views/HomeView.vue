@@ -1,45 +1,55 @@
 <template>
-  <div @click="handleBackgroundClick" class="white-background">
-    <div class="row m-3">
-      <div class="col">
-      </div>
-
-      <div class="col">
-        <div id="map" @click.stop></div>
-      </div>
-
-      <div class="col">
-      </div>
+  <div @click="handleBackgroundClick" class="white-background background">
+    <div>
+      <div id="map" @click.stop></div>
     </div>
-    <div class="row">
 
-      <div class="col">
-        <p>1. Klõpsa seenekoha märkimiseks kaardil!</p>
-        <p>2. Kirjuta siia, milliseid seeni sealt leida võib!</p>
-        <textarea v-model="descriptionBox" rows="5" cols="30" placeholder="Vöödilised võluseened..."
+    <div class="box-container">
+      <div class="box left-box">
+        <div class="blur-background blur-box" style="font-weight: 500">
+          <p>1. Klõpsa seenekoha märkimiseks kaardil!</p>
+          <p>2. Kirjuta siia, milliseid seeni sealt leida võib!</p>
+        </div>
+
+        <textarea v-model="descriptionBox"
+                  rows="5"
+                  cols="30"
+                  placeholder="Vöödilised võluseened..."
                   @click.stop @mousedown="startDrag"
-                  @mouseup="endDrag"></textarea>
+                  @mouseup="endDrag"
+                  class="text-field"></textarea>
       </div>
 
-      <div class="col m-3">
+      <div class="box right-box">
         <div>
-          <button :class="{ 'disabled-button': marker === null }" :disabled="marker === null" @click.stop="savePoint" class="btn btn-success">
+          <button :class="{ 'disabled-button': marker === null }"
+                  :disabled="marker === null"
+                  @click.stop="savePoint"
+                  class="btn btn-success">
             SALVESTA
           </button>
         </div>
         <div>
-          <button :class="{ 'disabled-button': pointIsSelected === false }" :disabled="pointIsSelected === false"
-                  @click.stop="editPoint" type="button" class="btn btn-warning">MUUDA
+          <button :class="{ 'disabled-button': pointIsSelected === false }"
+                  :disabled="pointIsSelected === false"
+                  @click.stop="editPoint"
+                  type="button"
+                  class="btn btn-warning">
+            MUUDA
           </button>
         </div>
         <div>
-          <button :class="{ 'disabled-button': pointIsSelected === false }" :disabled="pointIsSelected === false"
-                  @click.stop="deletePoint" type="button" class="btn btn-danger">KUSTUTA
+          <button :class="{ 'disabled-button': pointIsSelected === false }"
+                  :disabled="pointIsSelected === false"
+                  @click.stop="deletePoint"
+                  type="button"
+                  class="btn btn-danger">
+            KUSTUTA
           </button>
         </div>
-        <div v-if="message.length > 0" class="alert alert-warning m-3"> {{ message }}</div>
       </div>
     </div>
+    <div v-if="message.length > 0" class="alert alert-warning m-1"> {{ message }}</div>
   </div>
 </template>
 
@@ -100,7 +110,7 @@ export default {
       this.map = L.map('map', {
         minZoom: 7,
         maxBounds: estoniaBounds,
-        maxBoundsViscosity: 1.0
+        maxBoundsViscosity: 0.7
       }).setView([58.62756, 25.01173], 7);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
@@ -108,6 +118,8 @@ export default {
       this.map.on('click', this.addOnePointOnClick);
     },
     addOnePointOnClick(e) {
+      this.pointIsSelected = false;
+
       if (this.marker) {
         this.map.removeLayer(this.marker);
       }
