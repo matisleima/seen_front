@@ -133,7 +133,7 @@ width: 100%;
     width: 100%;
     box-sizing: border-box;
     outline: none;
-    font-family: Arial, sans-serif; /* Sets the font to Arial, with a generic sans-serif fallback */
+    font-family: Arial, sans-serif;
 }
 
 .text-field:focus {
@@ -163,7 +163,7 @@ width: 100%;
     background-position: center;
 }
 
-body { /* or your specific container */
+body {
     margin: 0;
     padding: 0;
     height: 100vh;
