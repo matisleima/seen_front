@@ -1,6 +1,6 @@
 <template>
-  <div @click="handleBackgroundClick" class="white-background background">
-    <div>
+  <div @click="handleBackgroundClick" @keydown.esc="closePopup" class="background">
+    <div class="map-container">
       <div id="map" @click.stop></div>
     </div>
 
@@ -49,7 +49,7 @@
         </div>
       </div>
     </div>
-    <div v-if="message.length > 0" class="alert alert-warning m-1"> {{ message }}</div>
+    <div v-if="message.length > 0" class="alert alert-warning"> {{ message }}</div>
   </div>
 </template>
 
@@ -63,6 +63,7 @@ export default {
     return {
       map: null,
       message: '',
+      popup: null,
       descriptionBox: '',
       selectedPointId: 0,
       selectedPoint: null,
@@ -157,7 +158,7 @@ export default {
           this.marker = null;
         }
 
-        const popup = L.popup()
+        this.popup = L.popup()
             .setLatLng(e.latlng)
             .setContent(feature.properties.description)
             .openOn(this.map);
@@ -199,7 +200,7 @@ export default {
           this.getAllPoints()
           this.descriptionBox = ''
         }).catch(error => {
-          const errorResponseBody = error.response.data
+          this.message = error.response.data
         })
       } else {
         this.message = 'Palun kirjelda asukohta!'
@@ -226,7 +227,7 @@ export default {
             this.message = ''
           }, 5000);
           this.descriptionBox = ''
-          this.map.closePopup();
+          this.closePopup();
           this.selectedPoint.dragging.disable();
           this.draggedCoordinates = [];
           this.selectedPoint = null;
@@ -294,7 +295,7 @@ export default {
         this.map.removeLayer(this.marker);
         this.marker = null
       }
-      this.map.closePopup();
+      this.closePopup();
       this.descriptionBox = '';
       if (this.selectedPoint) {
         this.selectedPoint.setLatLng({
@@ -306,7 +307,14 @@ export default {
           marker.dragging.disable();
         });
       }
-    }
+    },
+    closePopup() {
+      if (this.popup) {
+        this.map.closePopup();
+        this.popup = null;
+      }
+    },
+
   },
   mounted() {
     this.initMap();

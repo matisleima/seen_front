@@ -1,11 +1,14 @@
-.white-background {
-    background-color: white;
+.background {
     min-height: 100vh;
-width: 100%;
+    width: 100%;
+}
+
+.map-container {
+    padding: 20px 0;
 }
 
 #map {
-    margin: 20px auto 20px auto;
+    margin: 0px auto 0px auto;
     height: 400px;
     width: 600px;
 }
@@ -34,7 +37,6 @@ width: 100%;
 .right-box {
     align-self: flex-end;
     gap: 15px;
-    margin: 0 15px;
 }
 
 .btn:disabled,
@@ -57,16 +59,18 @@ width: 100%;
     margin-bottom: 1rem;
     border: 1px solid transparent;
     border-radius: .25rem;
+    width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 7px;
+    text-align: center;
+
 }
 
 .alert-warning {
     color: #856404;
     background-color: #fff3cd;
     border-color: #ffeeba;
-}
-
-.m-1 {
-    margin: 7px !important;
 }
 
 .btn {
@@ -156,19 +160,12 @@ width: 100%;
     border-radius: 10px;
 }
 
-.background {
-    background-image: url('https://1.bp.blogspot.com/-NoEf3Q5wTPc/XZTk5CrRpwI/AAAAAAAAF80/by5eCvAANo8I38FXiPhYEE1gRGnhzvpEgCLcBGAsYHQ/s1600/seenemets%2B22.09%2Bveel.jpg');
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: center;
-}
-
 body {
     margin: 0;
     padding: 0;
     height: 100vh;
     width: 100vw;
-    background-image: url('https://1.bp.blogspot.com/-NoEf3Q5wTPc/XZTk5CrRpwI/AAAAAAAAF80/by5eCvAANo8I38FXiPhYEE1gRGnhzvpEgCLcBGAsYHQ/s1600/seenemets%2B22.09%2Bveel.jpg');
+    background-image: url('/public/forest_large.png');
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center;
