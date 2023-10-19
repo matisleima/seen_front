@@ -1,5 +1,5 @@
 <template>
-  <div @click="handleBackgroundClick" @keydown.esc="closePopup" class="background">
+  <div @click="handleBackgroundClick" class="background">
     <div class="map-container">
       <div id="map" @click.stop></div>
     </div>
@@ -63,7 +63,7 @@ export default {
     return {
       map: null,
       message: '',
-      popup: null,
+      messageTimeout: '',
       descriptionBox: '',
       selectedPointId: 0,
       selectedPoint: null,
@@ -84,22 +84,6 @@ export default {
           description: ''
         }
       },
-      allPoints: {
-        type: 'FeatureCollection',
-        features: [
-          {
-            type: 'Feature',
-            geometry: {
-              type: 'Point',
-              coordinates: []
-            },
-            properties: {
-              id: 0,
-              description: ''
-            }
-          }
-        ]
-      }
     };
   },
   methods: {
@@ -138,11 +122,11 @@ export default {
         this.selectedPoint = null;
       }
     },
-    populateMap() {
+    populateMap(allPoints) {
       this.clearNonTileLayers();
 
       this.markers = [];
-      this.allPoints.features.forEach(feature => {
+      allPoints.features.forEach(feature => {
         const marker = this.createMarker(feature);
         this.markers.push(marker);
         marker.addTo(this.map);
@@ -152,16 +136,15 @@ export default {
       const marker = L.marker(feature.geometry.coordinates);
       marker.originalCoordinates = [...feature.geometry.coordinates];
 
+      marker.on('mouseover', e => {
+        marker.bindTooltip(feature.properties.description).openTooltip();
+      });
+
       marker.on('click', e => {
         if (this.marker) {
           this.map.removeLayer(this.marker);
           this.marker = null;
         }
-
-        this.popup = L.popup()
-            .setLatLng(e.latlng)
-            .setContent(feature.properties.description)
-            .openOn(this.map);
 
         if (this.selectedPoint && this.selectedPoint.dragging) {
           this.selectedPoint.dragging.disable();
@@ -188,25 +171,30 @@ export default {
         }
       });
     },
+    showMessage(text) {
+      if (this.messageTimeout) {
+        clearTimeout(this.messageTimeout);
+        this.messageTimeout = null;
+      }
+      this.message = text;
+      this.messageTimeout = setTimeout(() => {
+        this.message = ''
+      }, 5000);
+    },
     savePoint() {
       if (this.descriptionBox.length > 0) {
         this.singlePoint.properties.description = this.descriptionBox;
         this.$http.post("http://localhost:8080/add", this.singlePoint
         ).then(response => {
-          this.message = 'Asukoht salvestatud'
-          setTimeout(() => {
-            this.message = ''
-          }, 5000);
+          this.showMessage('Asukoht salvestatud')
           this.getAllPoints()
+          this.marker = null;
           this.descriptionBox = ''
         }).catch(error => {
-          this.message = error.response.data
+          this.showMessage('Asukoha salvestamine ebaõnnestus!')
         })
       } else {
-        this.message = 'Palun kirjelda asukohta!'
-        setTimeout(() => {
-          this.message = ''
-        }, 5000);
+        this.showMessage('Palun kirjelda asukohta!')
       }
     },
     editPoint() {
@@ -222,25 +210,18 @@ export default {
 
         this.$http.put("http://localhost:8080/edit", this.singlePoint
         ).then(response => {
-          this.message = 'Asukoht muudetud'
-          setTimeout(() => {
-            this.message = ''
-          }, 5000);
+          this.showMessage('Asukoht muudetud')
           this.descriptionBox = ''
-          this.closePopup();
           this.selectedPoint.dragging.disable();
           this.draggedCoordinates = [];
           this.selectedPoint = null;
           this.getAllPoints()
 
         }).catch(error => {
-          const errorResponseBody = error.response.data
+          this.showMessage('Asukoha muutmine ebaõnnestus!')
         })
       } else {
-        this.message = 'Palun kirjelda asukohta!'
-        setTimeout(() => {
-          this.message = ''
-        }, 5000);
+        this.showMessage('Palun kirjelda asukohta!')
       }
     },
     deletePoint() {
@@ -251,32 +232,24 @@ export default {
               }
             }
         ).then(response => {
-          this.message = 'Asukoht kustutatud'
-          setTimeout(() => {
-            this.message = ''
-          }, 5000);
-          this.getAllPoints()
+          this.showMessage('Asukoht kustutatud')
           this.descriptionBox = ''
           this.selectedPointId = 0
           this.pointIsSelected = false
         }).catch(error => {
-          const errorResponseBody = error.response.data
+          this.showMessage('Asukoha kustutamine ebaõnnestus!')
         })
       } else {
-        this.message = 'Palun vali mõni asukoht!'
-        setTimeout(() => {
-          this.message = ''
-        }, 5000);
+        this.showMessage('Palun vali mõni asukoht!')
       }
     },
     getAllPoints() {
       this.$http.get("http://localhost:8080/get-all")
           .then(response => {
-            this.allPoints = response.data
-            this.populateMap()
+            this.populateMap(response.data)
           })
           .catch(error => {
-            const errorResponseBody = error.response.data
+            this.showMessage('Asukohtade päring andmebaasist ebaõnnestus!')
           })
     },
     startDrag() {
@@ -295,7 +268,6 @@ export default {
         this.map.removeLayer(this.marker);
         this.marker = null
       }
-      this.closePopup();
       this.descriptionBox = '';
       if (this.selectedPoint) {
         this.selectedPoint.setLatLng({
@@ -308,13 +280,6 @@ export default {
         });
       }
     },
-    closePopup() {
-      if (this.popup) {
-        this.map.closePopup();
-        this.popup = null;
-      }
-    },
-
   },
   mounted() {
     this.initMap();
